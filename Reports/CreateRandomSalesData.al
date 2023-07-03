@@ -37,6 +37,7 @@ report 60100 "BAC Create Random Sales Data"
                 SalesHeader.Insert(true);
                 SalesHeader.Validate("Sell-to Customer No.", Customer."No.");
                 SalesHeader.Validate("Posting Date", OrderPostingDate);
+                SalesHeader.Validate("Location Code", '');
                 SalesHeader.Modify();
                 SalesLine.Init();
                 SalesLine.SetHideValidationDialog(true);
@@ -45,12 +46,18 @@ report 60100 "BAC Create Random Sales Data"
                 SalesLine."Line No." := 10000;
                 SalesLine.Insert(true);
                 SalesLine.Type := SalesLine.Type::Item;
+                SalesLine.Validate("Location Code", SalesHeader."Location Code");
                 SalesLine.Validate("No.", Item."No.");
                 SalesLine.Validate(Quantity, Random(10));
+                if SalesLine."Unit Price" = 0 then
+                    SalesLine.Validate("Unit Price", Random(100));
                 SalesLine.Modify();
                 Window.Update(1, Customer."No.");
                 Window.Update(2, item."No.");
-                Commit();
+                SalesHeader.Ship:=true;
+                SalesHeader.Invoice:=true;
+                Codeunit.Run(80, SalesHeader);
+                commit();
             until Customer.next = 0;
     end;
 
